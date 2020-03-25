@@ -28,6 +28,8 @@ from rest_framework import status
 
 from api.models import Category, Product
 from api.serializers import CategorySerializer, ProductSerializer
+import json
+from jsonfield import JSONField
 
 
 class CategoryList(APIView):
@@ -115,3 +117,23 @@ class ProductDetail(APIView):
         prod = Product.objects.get(id=pk)
         prod.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+#############
+##SALES######
+#############
+class CreateSale(APIView):
+    '''Creates a sale, including getting a payment intent from Stripe'''
+    @csrf_exempt
+    def post(self, request, format=None):
+        body = json.loads(request.body) # import this library at top
+        print(body)
+        body['name']
+
+        sale = Sale()
+        ...        
+        sale.save()
+
+        return Response({
+
+        })

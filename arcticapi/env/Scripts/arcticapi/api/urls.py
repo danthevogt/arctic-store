@@ -29,4 +29,5 @@ urlpatterns = [
     path('category/<int:pk>/', views.CategoryDetail.as_view()),
     path('product/', views.ProductList.as_view()),
     path('product/<int:pk>/', views.ProductDetail.as_view()),
+    path('sale/', views.CreateSale.as_view()),
 ]
