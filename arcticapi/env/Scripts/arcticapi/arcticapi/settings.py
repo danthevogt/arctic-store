@@ -22,6 +22,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = '3bipqbmdo!3hi2_(k9j^b$cz3$scy9r14#oc&tmc%a7=h5cdp#'
 
+
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -130,3 +132,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
+
+STRIPE_KEY = 'pk_test_iCL91JIyb5YKwhitxEyOfKzc00TXiGqpdE'
+STRIPE_SECRET = 'sk_test_cIJNl1xqOzyr8lKWR7NNM0l5001ZuqsS1e'
+import stripe
+stripe.api_key = STRIPE_SECRET
+
+intent = stripe.PaymentIntent.create(
+  amount=1099,
+  currency='usd',
+  # Verify your integration in this guide by including this parameter
+  metadata={'integration_check': 'accept_a_payment'},
+)

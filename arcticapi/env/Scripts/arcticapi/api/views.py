@@ -126,14 +126,27 @@ class CreateSale(APIView):
     '''Creates a sale, including getting a payment intent from Stripe'''
     @csrf_exempt
     def post(self, request, format=None):
+        # serializer = SaleSerializer(data=request.data)
         body = json.loads(request.body) # import this library at top
-        print(body)
-        body['name']
 
         sale = Sale()
-        ...        
+        
+        sale.name = body['name']
+        sale.address1 = body['address1']
+        sale.address2 = body['address2']
+        sale.city = body['city']
+        sale.state = body['state']
+        sale.zipcode = body['zipcode']
+        sale.total = body['total']
+        sale.items = body['items']
+        sale.payment_intent = stripe.PaymentIntent.create(
+            amount=int(sale.total * 100),
+            currency='usd',
+        )
+
         sale.save()
 
         return Response({
-
+            'sale_id': sale.id,
+            'client_secret': sale.payment_intent['client_secret'],
         })

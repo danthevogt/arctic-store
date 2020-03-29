@@ -30,4 +30,5 @@ urlpatterns = [
     path('product/', views.ProductList.as_view()),
     path('product/<int:pk>/', views.ProductDetail.as_view()),
     path('sale/', views.CreateSale.as_view()),
+    # path('sale/<int:pk>/', views.CreateSale.as_view()),
 ]
