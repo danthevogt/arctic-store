@@ -1,36 +1,51 @@
-# from django.shortcuts import render
-# from django.shortcuts import render
-# from django.contrib.auth.models import User, Group
-# from rest_framework import viewsets
-# from api.serializers import UserSerializer, GroupSerializer
-
-
-# class UserViewSet(viewsets.ModelViewSet):
-#     """
-#     API endpoint that allows users to be viewed or edited.
-#     """
-#     queryset = User.objects.all().order_by('-date_joined')
-#     serializer_class = UserSerializer
-
-
-# class GroupViewSet(viewsets.ModelViewSet):
-#     """
-#     API endpoint that allows groups to be viewed or edited.
-#     """
-#     queryset = Group.objects.all()
-#     serializer_class = GroupSerializer
-
 from django.http import Http404
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from api.models import Category, Product
-from api.serializers import CategorySerializer, ProductSerializer
-import json
-from jsonfield import JSONField
+from api.models import Category
+from api.serializers import CategorySerializer
+from api.models import Product
+from api.serializers import ProductSerializer
+from api.models import Sale
 
+import json
+import stripe
+
+
+
+## Post Sales
+
+class CreateSale(APIView):
+    '''Creates a sale, including getting a payment intent from Stripe'''
+    @csrf_exempt
+    def post(self, request, format=None):
+        body = json.loads(request.body)
+
+        sale = Sale()
+        sale.name = body['name']
+        sale.address1 = body['address1']
+        sale.address2 = body['address2']
+        sale.city = body['city']
+        sale.state = body['state']
+        sale.zipcode = body['zipcode']
+        sale.total = body['total']
+        sale.items = body['items']
+        sale.payment_intent = stripe.PaymentIntent.create(
+            amount=int(sale.total * 100),
+            currency='usd',
+        )
+        sale.save()
+
+        return Response({
+            'sale_id': sale.id, 
+            'client_secret': sale.payment_intent['client_secret'],
+        })
+
+
+
+## Get Categories
 
 class CategoryList(APIView):
     '''Get all categories or create a category'''
@@ -74,15 +89,22 @@ class CategoryDetail(APIView):
         cat.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    
+
+
+
+## Get Products
 
 class ProductList(APIView):
-    '''Get all categories or create a category'''
+    '''Get all products or create a Product'''
     @csrf_exempt
     def get(self, request, format=None):
         prods = Product.objects.all()
         if request.query_params.get('name'):
-            prods = prods.filter(title__contains=request.query_params.get('name'))
+            prods = prods.filter(name__contains=request.query_params.get('name'))
+        if request.query_params.get('description'):
+            prods = prods.filter(description__contains=request.query_params.get('description'))
+        if request.query_params.get('category'):
+            prods = prods.filter(category__title__contains=request.query_params.get('category'))
         serializer = ProductSerializer(prods, many=True)
         return Response(serializer.data)
 
@@ -96,7 +118,7 @@ class ProductList(APIView):
 
 
 class ProductDetail(APIView):
-    '''Work with an individual Category object'''
+    '''Work with an individual Product object'''
     @csrf_exempt
     def get(self, request, pk, format=None):
         prod = Product.objects.get(id=pk)
@@ -119,34 +141,6 @@ class ProductDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-#############
-##SALES######
-#############
-class CreateSale(APIView):
-    '''Creates a sale, including getting a payment intent from Stripe'''
-    @csrf_exempt
-    def post(self, request, format=None):
-        # serializer = SaleSerializer(data=request.data)
-        body = json.loads(request.body) # import this library at top
 
-        sale = Sale()
-        
-        sale.name = body['name']
-        sale.address1 = body['address1']
-        sale.address2 = body['address2']
-        sale.city = body['city']
-        sale.state = body['state']
-        sale.zipcode = body['zipcode']
-        sale.total = body['total']
-        sale.items = body['items']
-        sale.payment_intent = stripe.PaymentIntent.create(
-            amount=int(sale.total * 100),
-            currency='usd',
-        )
 
-        sale.save()
 
-        return Response({
-            'sale_id': sale.id,
-            'client_secret': sale.payment_intent['client_secret'],
-        })
